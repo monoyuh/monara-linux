@@ -74,7 +74,7 @@ build_step "bzip2"
 srcdir=$(extract_source "$SOURCES_DIR/bzip2-$BZIP2_VERSION.tar.gz" "bzip2-$BZIP2_VERSION")
 cd "$srcdir"
 run_make CFLAGS="$CFLAGS -fPIC" PREFIX=/usr
-run_make install PREFIX=/usr DESTDIR="$ROOTFS_DIR"
+run_make install PREFIX="$ROOTFS_DIR/usr"
 rm -rf "$srcdir"
 
 # ============================================================
