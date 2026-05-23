@@ -36,8 +36,10 @@ builddir="$build_dir/glibc-build"
 rm -rf "$builddir"
 mkdir -p "$builddir"
 cd "$builddir"
+# glibc breaks with -O3 and -flto (symbol redirection fails)
+GLIBC_CFLAGS="-O2 -march=native -mtune=native -pipe -fstack-protector-strong -U_FORTIFY_SOURCE"
 echo "libc_cv_slibdir=/usr/lib" > config.cache
-CC="gcc $CFLAGS" CXX="g++ $CXXFLAGS" \
+CC="gcc $GLIBC_CFLAGS" CXX="g++ $GLIBC_CFLAGS" \
     "$srcdir/configure" \
     --prefix=/usr \
     --libdir=/usr/lib \
