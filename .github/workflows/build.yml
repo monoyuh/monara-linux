@@ -25,17 +25,21 @@ jobs:
             openssl libarchive
 
       - name: Fetch kernel and runit sources
+        shell: bash
         run: |
+          cd "$GITHUB_WORKSPACE"
           mkdir -p sources
-          source config
+          . ./config
           wget -q "https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-$LINUX_VERSION.tar.xz" -O "sources/linux-$LINUX_VERSION.tar.xz" &
           wget -q "https://github.com/PhialsBasement/runit/releases/download/2.2.0/runit-$RUNIT_VERSION.tar.gz" -O "sources/runit-$RUNIT_VERSION.tar.gz" &
           wait
 
       - name: Build hybrid (binary packages + custom kernel)
+        shell: bash
         run: |
-          source config
-          source scripts/lib.sh
+          cd "$GITHUB_WORKSPACE"
+          . ./config
+          . ./scripts/lib.sh
           bash build-hybrid.sh
 
       - name: Create ISO
