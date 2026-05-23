@@ -1,0 +1,10 @@
+#!/bin/sh
+# Monara Linux - runit stage 2 (service manager)
+# Called by runit after stage 1 exits. Runs forever.
+
+PATH=/usr/bin:/usr/sbin
+
+echo "[ Monara ] Stage 2: Starting services..."
+
+# Start runsvdir to manage all services under /etc/runit/runsvdir/default
+exec runsvdir -P /etc/runit/runsvdir/default

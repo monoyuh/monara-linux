@@ -1,0 +1,44 @@
+name: Build Monara Linux ISO
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install build deps
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq \
+          build-essential gcc g++ make wget curl \
+          bc flex bison xorriso python3 \
+          libssl-dev libarchive-dev
+
+      - name: Fetch all sources
+        run: make fetch
+
+      - name: Build everything
+        run: make build
+
+      - name: Create ISO
+        run: make iso
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: monara-linux-iso
+          path: monara-*.iso
+          compression-level: 0
+
+      - name: Upload initramfs (debug)
+        uses: actions/upload-artifact@v4
+        with:
+          name: monara-initramfs
+          path: iso/boot/initramfs.gz
+          compression-level: 0

@@ -1,0 +1,23 @@
+#!/bin/sh
+# Monara Linux - initramfs init script (PID 1)
+# Sets up bare essentials and hands off to runit.
+
+PATH=/bin:/sbin:/usr/bin:/usr/sbin
+
+# Mount bare essentials
+mount -t proc none /proc
+mount -t sysfs none /sys
+mount -t devtmpfs none /dev
+
+mknod /dev/null c 1 3 2>/dev/null || true
+mknod /dev/console c 5 1 2>/dev/null || true
+
+# Boot banner
+clear
+[ -f /etc/issue ] && cat /etc/issue
+echo ""
+
+echo "[ Monara ] Starting runit..."
+
+# Hand off to runit as PID 1
+exec /sbin/init

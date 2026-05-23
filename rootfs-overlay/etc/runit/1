@@ -1,0 +1,36 @@
+#!/bin/sh
+# Monara Linux - runit stage 1 (system setup, runs once at boot)
+# Called by runit as part of the 3-stage init.
+
+PATH=/usr/bin:/usr/sbin
+
+echo "[ Monara ] Stage 1: Setting up system..."
+
+# Mount filesystems
+mount -t tmpfs none /run 2>/dev/null || true
+mount -t tmpfs none /tmp 2>/dev/null || true
+mkdir -p /dev/pts
+mount -t devpts none /dev/pts 2>/dev/null || true
+
+# Set hostname
+hostname Monara
+
+# Configure loopback
+ip link set lo up
+
+# Performance CPU governor (Clear Linux style)
+if [ -d /sys/devices/system/cpu ]; then
+    for cpu in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
+        [ -f "$cpu" ] && echo performance > "$cpu" 2>/dev/null || true
+    done
+fi
+
+# Create essential nodes if missing
+[ -e /dev/null ]   || mknod /dev/null c 1 3
+[ -e /dev/console ]|| mknod /dev/console c 5 1
+[ -e /dev/tty1 ]   || mknod /dev/tty1 c 4 1
+[ -e /dev/tty ]    || mknod /dev/tty c 5 0
+
+echo "[ Monara ] Stage 1 complete."
+
+exit 0

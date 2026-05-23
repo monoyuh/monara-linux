@@ -1,0 +1,9 @@
+NAME="Monara Linux"
+ID=monara
+PRETTY_NAME="Monara Linux 0.1.0 (Proto)"
+VERSION_ID="0.1.0"
+VERSION_CODENAME=Proto
+HOME_URL=""
+SUPPORT_URL=""
+BUG_REPORT_URL=""
+LOGO=/usr/share/monara/logo.txt

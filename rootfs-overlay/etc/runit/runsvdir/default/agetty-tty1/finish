@@ -1,0 +1,3 @@
+#!/bin/sh
+# Log agetty exits
+echo "agetty on tty1 exited: $?" >> /var/log/messages 2>/dev/null || true

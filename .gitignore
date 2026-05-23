@@ -1,0 +1,5 @@
+cache/
+rootfs/
+pkg/
+*.iso
+*.tar.*

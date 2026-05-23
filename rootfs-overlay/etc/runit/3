@@ -1,0 +1,26 @@
+#!/bin/sh
+# Monara Linux - runit stage 3 (shutdown)
+# Called by runit when it receives a shutdown signal.
+
+PATH=/usr/bin:/usr/sbin
+
+echo "[ Monara ] Shutting down..."
+
+# Stop all services
+for svdir in /etc/runit/runsvdir/default/*/; do
+    [ -d "$svdir" ] && sv force-stop "$svdir" 2>/dev/null || true
+done
+
+# Sync disks
+sync
+
+# Kill remaining processes
+kill -TERM -1 2>/dev/null || true
+sleep 1
+kill -KILL -1 2>/dev/null || true
+
+# Unmount everything
+umount -a -r 2>/dev/null || true
+
+echo "[ Monara ] Powering off."
+halt -f
