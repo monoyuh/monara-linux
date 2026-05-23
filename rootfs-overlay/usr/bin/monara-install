@@ -1,0 +1,125 @@
+#!/bin/sh
+# Monara Linux - Disk Installer
+# Run this from the live ISO to install Monara to your hard drive
+set -e
+
+RED='\033[1;31m'
+GREEN='\033[1;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+msg()  { printf "${GREEN}[ Monara ]${NC} %s\n" "$*"; }
+warn() { printf "${YELLOW}[ WARN  ]${NC} %s\n" "$*"; }
+err()  { printf "${RED}[ ERROR ]${NC} %s\n" "$*"; exit 1; }
+
+# Check we're in the live environment
+[ -f /etc/monara-live ] || err "This must be run from the Monara live ISO!"
+
+# List available disks
+msg "Available disks:"
+echo ""
+for d in /dev/sd? /dev/nvme?n? /dev/vd? /dev/mmcblk?; do
+    [ -b "$d" ] || continue
+    size=$(blockdev --getsize64 "$d" 2>/dev/null | awk '{printf "%.1fG", $1/1073741824}')
+    echo "  $d  (${size})"
+done
+echo ""
+
+# Get target disk
+printf "Enter target disk (e.g. /dev/sda): "
+read DISK
+[ -b "$DISK" ] || err "Not a block device: $DISK"
+
+warn "ALL DATA ON $DISK WILL BE DESTROYED!"
+printf "Type YES to continue: "
+read CONFIRM
+[ "$CONFIRM" = "YES" ] || err "Aborted."
+
+# Determine partition naming
+case "$DISK" in
+    *nvme*|*mmcblk*) P="${DISK}p" ;;
+    *)               P="${DISK}" ;;
+esac
+
+msg "Partitioning $DISK..."
+dd if=/dev/zero of="$DISK" bs=1M count=1 2>/dev/null
+
+# Create single partition
+printf "label: gpt\n, +256M, U, *\n, +, L\n" | sfdisk "$DISK" 2>/dev/null || \
+    err "Partitioning failed"
+
+sleep 1
+
+msg "Formatting partitions..."
+mkfs.vfat -F32 "${P}1" >/dev/null 2>&1 || err "Failed to format EFI partition"
+mkfs.ext4 -F "${P}2" >/dev/null 2>&1 || err "Failed to format root partition"
+
+msg "Mounting..."
+mkdir -p /mnt/target
+mount "${P}2" /mnt/target
+mkdir -p /mnt/target/boot
+mount "${P}1" /mnt/target/boot
+
+msg "Copying rootfs (this may take a while)..."
+# Copy everything except /proc /sys /dev /tmp /run /mnt
+for d in /bin /sbin /usr /etc /root /home /var /lib /lib64; do
+    [ -d "$d" ] && cp -a "$d" /mnt/target/ 2>/dev/null || true
+done
+
+# Create mountpoints
+for d in proc sys dev tmp run mnt; do
+    mkdir -p "/mnt/target/$d"
+done
+
+msg "Configuring bootloader..."
+# Copy kernel
+cp /boot/vmlinuz-monara /mnt/target/boot/
+cp /boot/initramfs.gz /mnt/target/boot/
+
+# Install Limine
+LIMINE_DIR=$(find / -name "limine-bios-cd.bin" -type f 2>/dev/null | head -1 | xargs dirname 2>/dev/null)
+if [ -n "$LIMINE_DIR" ] && [ -f "$LIMINE_DIR/limine-bios-install" ]; then
+    cp "$LIMINE_DIR"/limine-bios.sys /mnt/target/boot/ 2>/dev/null || true
+    cp "$LIMINE_DIR"/BOOTX64.EFI /mnt/target/boot/ 2>/dev/null || true
+
+    cat > /mnt/target/boot/limine.cfg << 'EOF'
+TIMEOUT=5
+DEFAULT_ENTRY=0
+
+:Monara Linux
+    PROTOCOL=linux
+    KERNEL_PATH=boot()/boot/vmlinuz-monara
+    MODULE_PATH=boot()/boot/initramfs.gz
+    CMDLINE=root=/dev/sda2 console=tty0 loglevel=3 quiet
+EOF
+
+    "$LIMINE_DIR/limine-bios-install" "$DISK" 2>/dev/null || warn "limine-bios-install failed"
+fi
+
+msg "Generating fstab..."
+ROOT_UUID=$(blkid -s UUID -o value "${P}2" 2>/dev/null || echo "")
+BOOT_UUID=$(blkid -s UUID -o value "${P}1" 2>/dev/null || echo "")
+cat > /mnt/target/etc/fstab << EOF
+# Monara Linux - /etc/fstab
+UUID=$ROOT_UUID  /          ext4  defaults,noatime  0  1
+UUID=$BOOT_UUID  /boot      vfat  defaults,noatime  0  2
+EOF
+
+msg "Setting up pacman keyring (if available)..."
+if command -v pacman-key >/dev/null 2>&1; then
+    pacman-key --init 2>/dev/null || true
+    pacman-key --populate 2>/dev/null || true
+fi
+
+msg "Syncing and unmounting..."
+sync
+umount /mnt/target/boot
+umount /mnt/target
+
+msg ""
+msg "============================================"
+msg "  Monara Linux installed to $DISK!"
+msg "============================================"
+msg ""
+msg "  Remove the ISO and reboot."
+msg "  Login: root (no password)"

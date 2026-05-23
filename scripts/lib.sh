@@ -15,7 +15,9 @@ fetch_source() {
     local dest="$SOURCES_DIR/$(basename "$url")"
     if [ ! -f "$dest" ]; then
         info "Fetching $url"
-        wget -q --show-progress "$url" -O "$dest" || curl -L -o "$dest" "$url" || die "Failed to fetch $url"
+        wget -q --timeout=30 "$url" -O "$dest" 2>/dev/null || \
+        curl -sL --connect-timeout 30 --max-time 180 -o "$dest" "$url" || \
+        die "Failed to fetch $url"
     fi
 }
 
