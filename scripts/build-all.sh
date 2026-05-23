@@ -387,6 +387,17 @@ make defconfig
 ./scripts/config --enable FOLD
 ./scripts/config --enable HEXDUMP
 ./scripts/config --enable OD
+# DHCP client for tethering
+./scripts/config --enable UDHCPC
+./scripts/config --enable FEATURE_UDHCPC_ARPING
+./scripts/config --enable FEATURE_UDHCPC_SANITIZEOPT
+# Networking tools
+./scripts/config --enable IFCONFIG
+./scripts/config --enable FEATURE_IFCONFIG_STATUS
+./scripts/config --enable ROUTE
+# USB info
+./scripts/config --enable LSUSB
+
 # Disable unused protocol support in networking
 ./scripts/config --disable FTPGET
 ./scripts/config --disable FTPPUT

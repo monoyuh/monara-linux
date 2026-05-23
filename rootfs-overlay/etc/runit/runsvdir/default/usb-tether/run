@@ -1,0 +1,31 @@
+#!/bin/sh
+# Monara Linux - USB tethering service
+# Brings up usb0 and gets a DHCP lease (Android/iOS/phone tethering)
+exec 2>&1
+
+echo "[usb-tether] Waiting for USB tether interface..."
+
+# Wait up to 30 seconds for usb0 to appear
+for i in $(seq 1 30); do
+    if ip link show usb0 >/dev/null 2>&1; then
+        echo "[usb-tether] usb0 found, bringing up..."
+        ip link set usb0 up
+        echo "[usb-tether] Running DHCP on usb0..."
+        exec udhcpc -i usb0 -f -q -s /usr/share/udhcpc/default.script
+    fi
+    sleep 1
+done
+
+echo "[usb-tether] No USB tether detected, will retry..."
+# Keep trying in background
+while true; do
+    if ip link show usb0 >/dev/null 2>&1; then
+        ip link set usb0 up
+        udhcpc -i usb0 -q -s /usr/share/udhcpc/default.script
+        # Monitor link - if usb0 goes down, loop back
+        while ip link show usb0 >/dev/null 2>&1; do
+            sleep 5
+        done
+    fi
+    sleep 2
+done

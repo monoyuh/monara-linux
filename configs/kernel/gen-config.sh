@@ -92,6 +92,37 @@ make allnoconfig
 ./scripts/config --disable CONFIG_WIRELESS
 
 # ============================================================
+# USB support (for tethering and input)
+# ============================================================
+./scripts/config --enable CONFIG_USB_SUPPORT
+./scripts/config --enable CONFIG_USB_COMMON
+./scripts/config --enable CONFIG_USB
+./scripts/config --enable CONFIG_USB_XHCI_HCD
+./scripts/config --enable CONFIG_USB_XHCI_PCI
+./scripts/config --enable CONFIG_USB_EHCI_HCD
+./scripts/config --enable CONFIG_USB_EHCI_PCI
+./scripts/config --enable CONFIG_USB_OHCI_HCD
+./scripts/config --enable CONFIG_USB_OHCI_PCI
+./scripts/config --enable CONFIG_USB_ACM
+./scripts/config --enable CONFIG_USB_PRINTER
+
+# USB Networking (for tethering)
+./scripts/config --enable CONFIG_USB_NET_DRIVERS
+./scripts/config --enable CONFIG_USB_USBNET
+./scripts/config --enable CONFIG_USB_NET_CDCETHER
+./scripts/config --enable CONFIG_USB_NET_CDC_NCM
+./scripts/config --enable CONFIG_USB_NET_CDC_EEM
+./scripts/config --enable CONFIG_USB_NET_CDC_SUBSET
+./scripts/config --enable CONFIG_USB_NET_RNDIS_HOST
+./scripts/config --enable CONFIG_USB_NET_ZAURUS
+./scripts/config --enable CONFIG_USB_NET_AX8817X
+./scripts/config --enable CONFIG_USB_NET_AX88179_178A
+./scripts/config --enable CONFIG_USB_NET_NET1080
+./scripts/config --enable CONFIG_USB_NET_MCS7830
+./scripts/config --enable CONFIG_USB_NET_SMSC75XX
+./scripts/config --enable CONFIG_USB_NET_SMSC95XX
+
+# ============================================================
 # Security (minimal)
 # ============================================================
 ./scripts/config --disable CONFIG_SECURITY

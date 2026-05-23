@@ -71,6 +71,14 @@ for d in proc sys dev tmp run mnt; do
     mkdir -p "/mnt/target/$d"
 done
 
+msg "Copying network configuration from live session..."
+# Copy live DNS config (from USB tether DHCP)
+if [ -f /etc/resolv.conf ] && [ ! -f /mnt/target/etc/resolv.conf ]; then
+    cp /etc/resolv.conf /mnt/target/etc/resolv.conf
+fi
+# Make USB tethering service executable
+chmod +x /mnt/target/etc/runit/runsvdir/default/usb-tether/run 2>/dev/null || true
+
 msg "Configuring bootloader..."
 # Copy kernel
 cp /boot/vmlinuz-monara /mnt/target/boot/

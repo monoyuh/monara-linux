@@ -1,0 +1,27 @@
+#!/bin/sh
+# Busybox udhcpc default script
+# Handles DHCP lease events for network interfaces
+
+RESOLV_FILE="/etc/resolv.conf"
+
+case "$1" in
+    deconfig)
+        ifconfig "$interface" 0.0.0.0
+        ;;
+    renew|bound)
+        ifconfig "$interface" "$ip" netmask "$subnet" broadcast "$broadcast"
+        if [ -n "$router" ]; then
+            while route del default 2>/dev/null; do :; done
+            for r in $router; do
+                route add default gw "$r"
+            done
+        fi
+        echo -n > "$RESOLV_FILE"
+        [ -n "$domain" ] && echo "search $domain" >> "$RESOLV_FILE"
+        for dns in $dns; do
+            echo "nameserver $dns" >> "$RESOLV_FILE"
+        done
+        ;;
+esac
+
+exit 0
