@@ -14,6 +14,9 @@ build:
 iso:
 	@./iso/mkiso.sh
 
+hybrid:
+	@./build-hybrid.sh
+
 quick: all
 
 clean:

@@ -2,7 +2,7 @@
 # Monara Linux - Hybrid build (binary packages + custom kernel)
 # Fast: uses Arch binary packages for base, builds only kernel from source
 set -euo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")"
 source config
 source scripts/lib.sh
 
@@ -29,7 +29,12 @@ PAC_PACKAGES=(
 )
 
 # Use pacman to download and install to rootfs
-sudo pacman -Sy --noconfirm --root="$ROOTFS_DIR" --cachedir=/var/cache/pacman/pkg \
+if [ "$(id -u)" -eq 0 ]; then
+    SUDO=""
+else
+    SUDO="sudo"
+fi
+$SUDO pacman -Sy --noconfirm --root="$ROOTFS_DIR" --cachedir=/var/cache/pacman/pkg \
     "${PAC_PACKAGES[@]}" 2>&1 | tail -20 || {
     info "pacman install had issues, trying alternative..."
     # Fallback: create minimal structure manually

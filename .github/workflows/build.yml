@@ -10,23 +10,33 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    container:
+      image: archlinux/archlinux:latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Install build deps
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq \
-            build-essential gcc g++ make wget curl \
-            bc flex bison xorriso python3 \
-            libssl-dev libarchive-dev
+          pacman -Syu --noconfirm
+          pacman -S --noconfirm \
+            base-devel gcc make wget curl \
+            bc flex bison xorriso python \
+            openssl libarchive
 
-      - name: Fetch all sources
-        run: make fetch
+      - name: Fetch kernel and runit sources
+        run: |
+          mkdir -p sources
+          source config
+          wget -q "https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-$LINUX_VERSION.tar.xz" -O "sources/linux-$LINUX_VERSION.tar.xz" &
+          wget -q "https://github.com/PhialsBasement/runit/releases/download/2.2.0/runit-$RUNIT_VERSION.tar.gz" -O "sources/runit-$RUNIT_VERSION.tar.gz" &
+          wait
 
-      - name: Build everything
-        run: make build
+      - name: Build hybrid (binary packages + custom kernel)
+        run: |
+          source config
+          source scripts/lib.sh
+          bash build-hybrid.sh
 
       - name: Create ISO
         run: make iso
